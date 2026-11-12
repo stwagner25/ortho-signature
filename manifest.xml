@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Orthodontic Centres signature add-in. Deploy from the Microsoft 365 admin centre (Settings >
+     Integrated apps > Upload custom apps > Office Add-in > upload this file) to everyone. The files it
+     points at are on GitHub Pages (repo stwagner25/ortho-signature), published by addin/publish.sh.
+     Bump <Version> when this file changes and re-upload it; changes to the signatures themselves only
+     need publish.sh. -->
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+           xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
+           xsi:type="MailApp">
+  <Id>a1c952d9-1861-4d7a-ba85-1d09e9a96a57</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Ortho-Tek Ltd</ProviderName>
+  <DefaultLocale>en-GB</DefaultLocale>
+  <DisplayName DefaultValue="Orthodontic Centres signature"/>
+  <Description DefaultValue="Adds the Orthodontic Centres email signature: your own when sending as yourself, the clinic's when sending from a clinic mailbox."/>
+  <IconUrl DefaultValue="https://stwagner25.github.io/ortho-signature/icon-64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://stwagner25.github.io/ortho-signature/icon-128.png"/>
+  <SupportUrl DefaultValue="https://www.ortho-centre.co.uk/"/>
+  <AppDomains>
+    <AppDomain>https://stwagner25.github.io</AppDomain>
+  </AppDomains>
+  <Hosts>
+    <Host Name="Mailbox"/>
+  </Hosts>
+  <Requirements>
+    <Sets>
+      <Set Name="Mailbox" MinVersion="1.1"/>
+    </Sets>
+  </Requirements>
+  <FormSettings>
+    <Form xsi:type="ItemRead">
+      <DesktopSettings>
+        <SourceLocation DefaultValue="https://stwagner25.github.io/ortho-signature/commands.html"/>
+        <RequestedHeight>250</RequestedHeight>
+      </DesktopSettings>
+    </Form>
+  </FormSettings>
+  <Permissions>ReadWriteItem</Permissions>
+  <Rule xsi:type="RuleCollection" Mode="Or">
+    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
+  </Rule>
+  <DisableEntityHighlighting>false</DisableEntityHighlighting>
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.1" xsi:type="VersionOverridesV1_1">
+      <Requirements>
+        <bt:Sets DefaultMinVersion="1.13">
+          <bt:Set Name="Mailbox"/>
+        </bt:Sets>
+      </Requirements>
+      <Hosts>
+        <Host xsi:type="MailHost">
+          <Runtimes>
+            <!-- classic Outlook on Windows loads the .js directly; everything else loads the page -->
+            <Runtime resid="WebViewRuntime.Url">
+              <Override type="javascript" resid="JSRuntime.Url"/>
+            </Runtime>
+          </Runtimes>
+          <DesktopFormFactor>
+            <FunctionFile resid="WebViewRuntime.Url"/>
+            <ExtensionPoint xsi:type="LaunchEvent">
+              <LaunchEvents>
+                <LaunchEvent Type="OnNewMessageCompose" FunctionName="onNewMessageComposeHandler"/>
+                <LaunchEvent Type="OnMessageFromChanged" FunctionName="onMessageFromChangedHandler"/>
+              </LaunchEvents>
+              <SourceLocation resid="WebViewRuntime.Url"/>
+            </ExtensionPoint>
+          </DesktopFormFactor>
+        </Host>
+      </Hosts>
+      <Resources>
+        <bt:Images>
+          <bt:Image id="Icon.16" DefaultValue="https://stwagner25.github.io/ortho-signature/icon-16.png"/>
+          <bt:Image id="Icon.32" DefaultValue="https://stwagner25.github.io/ortho-signature/icon-32.png"/>
+          <bt:Image id="Icon.80" DefaultValue="https://stwagner25.github.io/ortho-signature/icon-80.png"/>
+        </bt:Images>
+        <bt:Urls>
+          <bt:Url id="WebViewRuntime.Url" DefaultValue="https://stwagner25.github.io/ortho-signature/commands.html"/>
+          <bt:Url id="JSRuntime.Url" DefaultValue="https://stwagner25.github.io/ortho-signature/launchevent.js"/>
+        </bt:Urls>
+      </Resources>
+    </VersionOverrides>
+  </VersionOverrides>
+</OfficeApp>
