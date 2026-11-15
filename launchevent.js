@@ -85,7 +85,7 @@ function ocsigApply(event) {
           ocsigRemoveOld(item, function () {
             ocsigAddImages(item, sig.images, function (failed) {
               item.body.setSignatureAsync(sig.html, { coercionType: Office.CoercionType.Html }, function (sr) {
-                ocsigDiag(item, '3 done: disable ' + (dr ? ocsigErr(dr) : 'n/a') + ', images ' +
+                ocsigDiag(item, '3 done for ' + from + ' (' + (event.type || '?') + '): disable ' + (dr ? ocsigErr(dr) : 'n/a') + ', images ' +
                   (sig.images.length - failed.length) + '/' + sig.images.length + (failed.length ? ' ' + failed[0] : '') +
                   ', setSignature ' + ocsigErr(sr));
                 finish();
