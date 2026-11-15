@@ -55,7 +55,7 @@ function ocsigAddImages(item, names, done) {
 
 // Diagnostic (15 Nov 2026), off unless OCSIG_DIAG is true: shows how far the add-in got as a bar at the top of the new
 // email, because the add-in's own console can't be read in Outlook on the web. Set false to turn off.
-var OCSIG_DIAG = true;
+var OCSIG_DIAG = false;
 function ocsigDiag(item, text) {
   if (OCSIG_DIAG && typeof console !== 'undefined') console.log('[ocsig] ' + text);
   if (!OCSIG_DIAG || !item || !item.notificationMessages) return;
