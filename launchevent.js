@@ -42,32 +42,60 @@ function ocsigRemoveOld(item, done) {
 }
 
 function ocsigAddImages(item, names, done) {
-  var list = names.slice();
+  var list = names.slice(), failed = [];
   (function next() {
-    if (!list.length) { done(); return; }
+    if (!list.length) { done(failed); return; }
     var n = list.shift();
-    item.addFileAttachmentFromBase64Async(OCSIG.images[n], 'ocsig-' + n, { isInline: true }, function () { next(); });
+    item.addFileAttachmentFromBase64Async(OCSIG.images[n], 'ocsig-' + n, { isInline: true }, function (r) {
+      if (r.status !== Office.AsyncResultStatus.Succeeded) failed.push(n + ': ' + (r.error && r.error.message));
+      next();
+    });
   })();
 }
+
+// TEMPORARY diagnostic (15 Nov 2026): shows how far the add-in got as a bar at the top of the new
+// email, because the add-in's own console can't be read in Outlook on the web. Set false to turn off.
+var OCSIG_DIAG = true;
+function ocsigDiag(item, text) {
+  if (!OCSIG_DIAG || !item.notificationMessages) return;
+  try {
+    item.notificationMessages.replaceAsync('ocsigdiag', {
+      type: Office.MailboxEnums.ItemNotificationMessageType.ErrorMessage,
+      message: ('Signature add-in: ' + text).slice(0, 150)
+    });
+  } catch (e) {}
+}
+function ocsigErr(r) { return r.status === Office.AsyncResultStatus.Succeeded ? 'ok' : 'FAILED ' + (r.error && (r.error.code + ' ' + r.error.message)); }
 
 function ocsigApply(event) {
   var item = Office.context.mailbox.item;
   var finish = function () { event.completed(); };
-  item.from.getAsync(function (r) {
-    var from = (r.status === Office.AsyncResultStatus.Succeeded && r.value && r.value.emailAddress) ||
-               Office.context.mailbox.userProfile.emailAddress;
-    var sig = ocsigFor(from);
-    if (!sig) { finish(); return; }   // not someone we sign for: leave Outlook's own signature alone
-    var set = function () {
-      ocsigRemoveOld(item, function () {
-        ocsigAddImages(item, sig.images, function () {
-          item.body.setSignatureAsync(sig.html, { coercionType: Office.CoercionType.Html }, finish);
-        });
-      });
-    };
-    // stop Outlook adding its own signature (from the Intune script) on top of ours
-    if (item.disableClientSignatureAsync) item.disableClientSignatureAsync(set); else set();
-  });
+  try {
+    ocsigDiag(item, '1 started (' + Office.context.diagnostics.platform + ' ' + Office.context.diagnostics.version + ')');
+    item.from.getAsync(function (r) {
+      try {
+        var from = (r.status === Office.AsyncResultStatus.Succeeded && r.value && r.value.emailAddress) ||
+                   Office.context.mailbox.userProfile.emailAddress;
+        var sig = ocsigFor(from);
+        ocsigDiag(item, '2 from ' + from + ' (getAsync ' + ocsigErr(r) + '), signature ' + (sig ? 'found' : 'NOT found'));
+        if (!sig) { finish(); return; }   // not someone we sign for: leave Outlook's own signature alone
+        var set = function (dr) {
+          ocsigRemoveOld(item, function () {
+            ocsigAddImages(item, sig.images, function (failed) {
+              item.body.setSignatureAsync(sig.html, { coercionType: Office.CoercionType.Html }, function (sr) {
+                ocsigDiag(item, '3 done: disable ' + (dr ? ocsigErr(dr) : 'n/a') + ', images ' +
+                  (sig.images.length - failed.length) + '/' + sig.images.length + (failed.length ? ' ' + failed[0] : '') +
+                  ', setSignature ' + ocsigErr(sr));
+                finish();
+              });
+            });
+          });
+        };
+        // stop Outlook adding its own signature (from the Intune script) on top of ours
+        if (item.disableClientSignatureAsync) item.disableClientSignatureAsync(set); else set();
+      } catch (e) { ocsigDiag(item, 'ERROR ' + e.message); finish(); }
+    });
+  } catch (e) { ocsigDiag(item, 'ERROR ' + e.message); finish(); }
 }
 
 function onNewMessageComposeHandler(event) { ocsigApply(event); }
