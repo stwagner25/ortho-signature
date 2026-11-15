@@ -57,7 +57,8 @@ function ocsigAddImages(item, names, done) {
 // email, because the add-in's own console can't be read in Outlook on the web. Set false to turn off.
 var OCSIG_DIAG = true;
 function ocsigDiag(item, text) {
-  if (!OCSIG_DIAG || !item.notificationMessages) return;
+  if (OCSIG_DIAG && window.console) console.log('[ocsig] ' + text);
+  if (!OCSIG_DIAG || !item || !item.notificationMessages) return;
   try {
     item.notificationMessages.replaceAsync('ocsigdiag', {
       type: Office.MailboxEnums.ItemNotificationMessageType.ErrorMessage,
@@ -68,6 +69,7 @@ function ocsigDiag(item, text) {
 function ocsigErr(r) { return r.status === Office.AsyncResultStatus.Succeeded ? 'ok' : 'FAILED ' + (r.error && (r.error.code + ' ' + r.error.message)); }
 
 function ocsigApply(event) {
+  if (OCSIG_DIAG && window.console) console.log('[ocsig] handler called');
   var item = Office.context.mailbox.item;
   var finish = function () { event.completed(); };
   try {
@@ -101,5 +103,6 @@ function ocsigApply(event) {
 function onNewMessageComposeHandler(event) { ocsigApply(event); }
 function onMessageFromChangedHandler(event) { ocsigApply(event); }
 
+if (OCSIG_DIAG && window.console) console.log('[ocsig] script loaded, registering handlers');
 Office.actions.associate('onNewMessageComposeHandler', onNewMessageComposeHandler);
 Office.actions.associate('onMessageFromChangedHandler', onMessageFromChangedHandler);
